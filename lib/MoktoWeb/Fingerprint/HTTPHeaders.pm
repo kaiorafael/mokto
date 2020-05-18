@@ -24,7 +24,13 @@ sub forensic_header($self, $headers) {
    # true means they server have the protection
    my %owasp_missing_headers = (
          'Strict-Transport-Security' => 'True',
-         'X-XSS-Protection' => 'True'
+         'X-XSS-Protection' => 'True',
+         'Public-Key-Pins' => 'True',
+         'X-Content-Type-Options' => 'True',
+         'Content-Security-Policy' => 'True',
+         'X-Permitted-Cross-Domain-Policies' => 'True',
+         'Referrer-Policy' => 'True',
+         'Expect-CT' => 'True',
    );
 
    my $report = MoktoReport->get_instance;
