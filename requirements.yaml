@@ -1,0 +1,9 @@
+---
+ Debian:
+        - libssl-dev
+        - zlib1g-dev
+
+ CPAN:
+        - Mojolicious
+        - Net::SSLeay
+        - IO::Socket::SSL
