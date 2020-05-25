@@ -15,6 +15,7 @@ use MoktoWeb::HTTPTraffic::Requests;
 
 has fp_results => undef;
 has url => undef;
+my $report = MoktoReport->get_instance;
 
 # headers is a hash reference
 # investigate headers
@@ -32,8 +33,6 @@ sub forensic_header($self, $headers) {
          'Referrer-Policy' => 'True',
          'Expect-CT' => 'True',
    );
-
-   my $report = MoktoReport->get_instance;
 
    # hashmap - getting all headers name, making UpperCase
    # many sites handles the Security Headers with different cases
@@ -61,11 +60,17 @@ sub forensic_header($self, $headers) {
    my $json_report = encode_json \%report;
    say $json_report;
 =cut
+   my %report = (
+      'domain' => $self->url,
+      'headers' => $hash_ref{'headers'},
+      'OWASP' => \%owasp_missing_headers
+   );
+   $report->set_report_field($self->url, \%report);
 
    # Singleton report approach
-   $report->set_report_field('domain', $self->url);
-   $report->set_report_field('headers', $hash_ref{'headers'});
-   $report->set_report_field('OWASP', \%owasp_missing_headers);
+   #$report->set_report_field('domain', $self->url);
+   #$report->set_report_field('headers', $hash_ref{'headers'});
+   #$report->set_report_field('OWASP', \%owasp_missing_headers);
 
 }
 
@@ -91,9 +96,42 @@ sub fp_send_request($self, $method, $url) {
    );
 }
 
+sub fp_async_requests($self, @urls) {
+   my $f = MoktoWeb::HTTPTraffic::Requests->new();
+   my @response = $f->send_async_requets(@urls);
+   #say Dumper @response;
+   #say $response[0]->req->url->host;
+   #say Dumper $response[0]->res->headers;
+
+   for my $i (0..$#response) {
+      if ( defined $response[$i]->req ) {
+         $self->url(
+            $response[$i]->req->url->host
+         );
+         $self->forensic_header(
+            \$response[$i]->res->headers
+         );
+      }
+   }
+
+}
 1;
 
 # Test
 #my $f = MoktoWeb::HTTPTraffic::Requests->new();
 #say $response = $f->single_request('HEAD', 'blog.kaiux.com');
 #say Dumper $response;
+#
+=item
+my $f = MoktoWeb::Fingerprint::HTTPHeaders->new();
+my @ur;
+my $fh = IO::File->new("/tmp/bar", "r");
+ if (defined $fh) {
+    for my $u (<$fh>) {
+       chomp($u);
+       push @ur, $u;
+    }
+     undef $fh;       # automatically closes the file
+ }
+$f->fp_async_requests(@ur);
+=cut

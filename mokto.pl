@@ -16,54 +16,71 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use Mojo::Base -base, -signatures;
 use Data::Dumper;
 use Getopt::Long qw(GetOptions);
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use MoktoWeb;
 use MoktoReport;
+use MoktoUtils;
+use Mojo::Base -base, -signatures;
 
 ##### Global options
-my %http_methods = ( 'HEAD' => undef, 'GET' => undef , 'DELETE' => undef);
-my $default_method = 'HEAD';
-
-sub usage() {
-   say "--method\tHTTP methods";
-   say "--scan\t Default is all";
-   say "--host\tdomain";
-   exit 2;
-}
-
-sub is_valid_http_method($method) {
-   die ("Invalid HTTP method : $method") if ( not exists($http_methods{$method}) );
-}
+my $_utils = MoktoUtils->new();
 
 ##################
 #### Main code
 ##################
 
+# Arguments Accepted
 my %args = ();
 GetOptions(\%args,
    "method=s",
    "scan=s",
-   "host=s"
-) or die usage(); #"Usage: $0 --debug\n";
+   "host=s",
+   "mhosts=s"
+) or die $_utils->usage(); #"Usage: $0 --debug\n";
 
 ## Testing options
+
+#default http method (HEAD) is default
+my $default_method = undef;
+
+### applies method provided by args or gets default
 $default_method = uc($args{'method'}) if exists $args{'method'};
-die "Missing --host" unless $args{'host'};
-die ("Not supported HTTP method: $default_method")
-   if (not exists($http_methods{$default_method}));
+if ( !defined $default_method ) {
+   $default_method = $_utils->get_default_method;
+}
 
-# ready to send the requests based on modules
-### sending request based on http method
-my $f = MoktoWeb->new();
+# make sure is a valid http method
+$_utils->is_valid_http_method($default_method);
+
+## check for hosts scan approaches
+if ( exists $args{'host'} and exists $args{'mhosts'} ) {
+   say "";
+   say "You cannot use `host` and `mhosts` altogether";
+   $_utils->usage();
+}
+
+# setup the scanner and report
+my $moktoweb = MoktoWeb->new();
 my $report = MoktoReport->get_instance;
-$report->{url} = $args{'host'};
 
-my $oclass = $f->get_module_class('http_header_fingerprint', $args{'host'});
-$oclass->fp_send_request($default_method, $args{'host'});
+###
+#TODO define method to run all scan types
+#
+## this uses synchronous request
+if ( exists $args{'host'} ) {
+   my $oclass = $moktoweb->get_module_class('http_header_fingerprint', $args{'host'});
+   $oclass->fp_send_request($default_method, $args{'host'});
+}
+
+if ( exists $args{'mhosts'} ) {
+   my $array_ref = $_utils->load_file($args{'mhosts'});
+
+   my $oclass = $moktoweb->get_module_class('http_header_fingerprint', 'example.com');
+   $oclass->fp_async_requests(@$array_ref);
+}
 
 ### printing report
 $report->print_report();
