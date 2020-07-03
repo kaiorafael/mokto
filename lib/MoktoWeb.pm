@@ -10,13 +10,15 @@ use Mojo::URL;
 use Carp qw( croak );
 
 require MoktoWeb::Fingerprint::HTTPHeaders;
+require MoktoWeb::Fingerprint::SSLInfo;
 use Data::Dumper;
 
 has 'module_name';
 has 'url';
 
 my %supported_modules = (
-   'http_header_fingerprint'=> 'MoktoWeb::Fingerprint::HTTPHeaders'
+   'http_header_fingerprint' => 'MoktoWeb::Fingerprint::HTTPHeaders',
+   'http_ssl_fingerprint' => 'MoktoWeb::Fingerprint::SSLInfo'
 );
 
 sub get_module_name {

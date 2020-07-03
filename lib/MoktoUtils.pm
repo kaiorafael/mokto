@@ -20,6 +20,18 @@ sub is_valid_http_method($self, $method) {
    }
 }
 
+sub valid_scan_type($self, $type) {
+   my %scan = (
+      default => 'http_header_fingerprint',
+      http_header_fingerprint => "http_header_fingerprint",
+      http_ssl_fingerprint => "http_ssl_fingerprint"
+   );
+
+   die "Unsupported scan type: $type" if not exists $scan{$type};
+   # if dont break, just return
+   return $scan{$type};
+}
+
 sub usage {
    say "";
    my $myhelp= <<EOF;
@@ -30,6 +42,10 @@ sub usage {
    --scan
       http_header_fingerprint: performs a head/get to get host headers
                                the scan checks for OWASP best security headers
+
+      http_ssl_fingerprint:    list all protocols and cipher supported
+                               this scan type is dependable of OpenSSL compilation
+
    --mhosts
       file: This option performs scan check in multiple hosts in a file.
                 Each host/domain perl line.

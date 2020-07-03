@@ -68,10 +68,14 @@ my $report = MoktoReport->get_instance;
 
 ###
 #TODO define method to run all scan types
-#
+
+# chck if type is supported, otherwise use default
+my $scan_type = undef;
+$scan_type = exists $args{'scan'} ? $_utils->valid_scan_type($args{'scan'}) : $_utils->valid_scan_type('default');
+
 ## this uses synchronous request
 if ( exists $args{'host'} ) {
-   my $oclass = $moktoweb->get_module_class('http_header_fingerprint', $args{'host'});
+   my $oclass = $moktoweb->get_module_class($scan_type, $args{'host'});
    $oclass->fp_send_request($default_method, $args{'host'});
 }
 
