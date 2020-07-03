@@ -11,6 +11,10 @@ a Web fingerprint tool written in Mojolicious
    --scan
       http_header_fingerprint: performs a head/get to get host headers
                                the scan checks for OWASP best security headers
+
+      http_ssl_fingerprint:    list all protocols and cipher supported
+                               this scan type is dependable of OpenSSL compilation
+
    --mhosts
       file: This option performs scan check in multiple hosts in a file.
                 Each host/domain perl line.
@@ -18,8 +22,12 @@ a Web fingerprint tool written in Mojolicious
    Examples:
 
    # Default HEAD scan (http_header_fingerprint)
-   perl mokto.pl --host blog.kaiux.com
+   perl mokto.pl --host yourhost.com 
+
+   # Using SSL fingerprint
+   perl mokto.pl -h yourhost.com -s http_ssl_fingerprint
 
    # Default bulk HEAD scan
    perl mokto.pl --mhosts /tmp/hosts_file
+
 ```
